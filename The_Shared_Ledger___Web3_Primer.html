@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Shared Ledger — A Web3 Primer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #3B2B1E;
+    --ink-soft: #6E5A45;
+    --paper: #F6EEDE;
+    --paper-card: #EEE0C2;
+    --rule: #C3A15E;
+    --verify: #52643F;
+    --verify-soft: #78895F;
+    --stamp: #7C2E39;
+    --stamp-soft: #9A4A4F;
+    --focus: #52643F;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --ink: #F1E6CC;
+      --ink-soft: #C7B393;
+      --paper: #211A12;
+      --paper-card: #2C2317;
+      --rule: #705832;
+      --verify: #93AC79;
+      --verify-soft: #728C5C;
+      --stamp: #DB929A;
+      --stamp-soft: #C0727C;
+      --focus: #93AC79;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #F1E6CC;
+    --ink-soft: #C7B393;
+    --paper: #211A12;
+    --paper-card: #2C2317;
+    --rule: #705832;
+    --verify: #93AC79;
+    --verify-soft: #728C5C;
+    --stamp: #DB929A;
+    --stamp-soft: #C0727C;
+    --focus: #93AC79;
+  }
+
+  * { box-sizing: border-box; }
+  html {
+    scroll-padding-top: env(safe-area-inset-top, 0px);
+    scroll-behavior: smooth;
+  }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "EB Garamond", Georgia, "Times New Roman", serif;
+    font-size: 18px;
+    line-height: 1.65;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    -webkit-font-smoothing: antialiased;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+  }
+
+  h1, h2, h3 { font-family: "Playfair Display", Georgia, "Times New Roman", serif; margin: 0; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+
+  /* period-manuscript ornament used as a section flourish */
+  .hedera { color: var(--rule); font-size: 1.1rem; letter-spacing: 0.3em; }
+
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 28px; }
+  .prose { max-width: 62ch; }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    padding-top: calc(22px + env(safe-area-inset-top, 0px));
+    padding-bottom: 18px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--rule);
+    position: relative;
+  }
+  .topbar::after {
+    content: "";
+    position: absolute; left: 0; right: 0; bottom: -5px;
+    height: 1px;
+    background: var(--rule);
+    opacity: 0.55;
+  }
+  .brand {
+    font-family: "Playfair Display", serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 1.3rem;
+    letter-spacing: 0.01em;
+  }
+  .brand span { color: var(--stamp-soft); font-style: normal; }
+  .topbar nav { display: flex; gap: 24px; font-size: 0.94rem; font-variant: small-caps; letter-spacing: 0.03em; }
+  .topbar nav a { text-decoration: none; color: var(--ink-soft); border-bottom: 1px solid transparent; padding-bottom: 2px; }
+  .topbar nav a:hover { border-bottom-color: var(--stamp-soft); color: var(--ink); }
+  @media (max-width: 620px) {
+    .topbar nav { display: none; }
+  }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 80px 0 60px; }
+  .hero .folio { font-family: "EB Garamond", serif; font-style: italic; font-size: 0.95rem; color: var(--stamp-soft); letter-spacing: 0.03em; margin-bottom: 16px; }
+  .hero h1 {
+    font-size: clamp(2.3rem, 5.6vw, 3.8rem);
+    line-height: 1.1;
+    font-weight: 600;
+    font-style: italic;
+    max-width: 15ch;
+  }
+  .hero p.lede { margin-top: 24px; font-size: 1.18rem; color: var(--ink-soft); max-width: 46ch; }
+  .hero .cta-row { margin-top: 34px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 13px 26px;
+    font-family: "EB Garamond", serif;
+    font-size: 1rem;
+    font-weight: 600;
+    font-variant: small-caps;
+    letter-spacing: 0.02em;
+    border-radius: 999px;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1.5px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  }
+  .btn:hover { background: var(--verify); border-color: var(--verify); color: var(--paper); }
+  .btn.primary { background: var(--ink); color: var(--paper); }
+  .btn.primary:hover { background: var(--stamp-soft); border-color: var(--stamp-soft); color: #fff; }
+
+  /* ---------- chain visual ---------- */
+  .chain-stage {
+    margin-top: 56px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .chain {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    min-width: max-content;
+  }
+  .blockcard {
+    position: relative;
+    width: 156px;
+    padding: 20px 14px 18px;
+    background: var(--paper-card);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--rule) 60%, transparent);
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+    animation: blockIn 0.5s ease forwards;
+  }
+  .blockcard::before {
+    content: "";
+    position: absolute; top: 0; left: 10px; right: 10px; height: 6px;
+    background-image: radial-gradient(circle at 50% 0, transparent 5px, var(--rule) 5.5px);
+    background-size: 14px 12px;
+    background-position: 0 -6px;
+    background-repeat: repeat-x;
+    opacity: 0.7;
+  }
+  .blockcard .num { font-family: "EB Garamond", serif; font-style: italic; font-size: 0.8rem; color: var(--ink-soft); }
+  .blockcard .hash { font-family: "EB Garamond", serif; font-size: 0.82rem; margin-top: 10px; word-break: break-all; color: var(--ink); }
+  .blockcard .stamp {
+    position: absolute; top: -12px; right: -10px;
+    width: 38px; height: 38px; border-radius: 50%;
+    border: none;
+    color: var(--paper);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.95rem;
+    transform: rotate(-11deg) scale(0);
+    background: radial-gradient(circle at 32% 28%, var(--stamp-soft), var(--stamp) 70%);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+    animation: stampIn 0.35s ease forwards;
+  }
+  .link {
+    width: 30px; height: 1.5px; background: var(--rule); flex: none;
+    opacity: 0; animation: fadeIn 0.4s ease forwards;
+    position: relative;
+  }
+  .link::after {
+    content: "◆";
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -55%);
+    font-size: 0.4rem;
+    color: var(--rule);
+  }
+  @keyframes blockIn { to { opacity: 1; transform: translateY(0) scale(1); } }
+  @keyframes stampIn { to { transform: rotate(-11deg) scale(1); } }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  .blockcard:nth-of-type(1) { animation-delay: 0.05s; }
+  .blockcard:nth-of-type(2) { animation-delay: 0.35s; }
+  .blockcard:nth-of-type(3) { animation-delay: 0.65s; }
+  .blockcard:nth-of-type(4) { animation-delay: 0.95s; }
+  .blockcard:nth-of-type(5) { animation-delay: 1.25s; }
+  .blockcard .stamp { animation-delay: inherit; }
+  .blockcard:nth-of-type(1) .stamp { animation-delay: 0.35s; }
+  .blockcard:nth-of-type(2) .stamp { animation-delay: 0.65s; }
+  .blockcard:nth-of-type(3) .stamp { animation-delay: 0.95s; }
+  .blockcard:nth-of-type(4) .stamp { animation-delay: 1.25s; }
+  .blockcard:nth-of-type(5) .stamp { animation-delay: 1.55s; }
+  .link:nth-of-type(1) { animation-delay: 0.3s; }
+
+  @media (max-width: 620px) {
+    .chain { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .link { width: 2px; height: 20px; margin-left: 20px; }
+  }
+
+  /* ---------- ledger sections ---------- */
+  .ledger { padding: 10px 0 80px; }
+  .entry {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 28px;
+    padding: 50px 0 18px;
+    border-top: none;
+    position: relative;
+  }
+  .entry::before {
+    content: "❦";
+    position: absolute;
+    top: 14px; left: 0; right: 0;
+    text-align: center;
+    color: var(--rule);
+    font-size: 1rem;
+  }
+  .entry:first-child { padding-top: 8px; }
+  .entry:first-child::before { content: none; }
+  .entry:last-child { padding-bottom: 60px; border-bottom: 2px solid var(--rule); }
+  .entry .folio { font-family: "EB Garamond", serif; font-style: italic; font-size: 0.88rem; color: var(--stamp-soft); padding-top: 4px; }
+  .entry h2 { font-size: 1.6rem; font-weight: 600; font-style: italic; margin-bottom: 14px; }
+  .entry p { color: var(--ink-soft); margin: 0 0 12px; max-width: 58ch; }
+  .entry p:last-child { margin-bottom: 0; }
+  .entry .keyword { color: var(--stamp); font-weight: 600; }
+
+  @media (max-width: 620px) {
+    .entry { grid-template-columns: 1fr; gap: 10px; }
+    .entry .folio { padding-top: 0; }
+  }
+
+  /* diagram row for decentralization */
+  .diagram-pair { display: flex; gap: 30px; margin-top: 22px; flex-wrap: wrap; }
+  .diagram-box { flex: 1 1 220px; }
+  .diagram-box svg { width: 100%; height: auto; }
+  .diagram-box .cap { font-family: "EB Garamond", serif; font-style: italic; font-size: 0.85rem; color: var(--ink-soft); margin-top: 8px; text-align: center; }
+
+  /* NFT deed card */
+  .deed {
+    margin-top: 20px; max-width: 320px;
+    border: 1px solid var(--rule);
+    background: var(--paper-card);
+    padding: 22px;
+    position: relative;
+    border-radius: 2px;
+  }
+  .deed::before {
+    content: ""; position: absolute; inset: 6px;
+    border: 1px solid var(--rule);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .deed .title { font-family: "Playfair Display", serif; font-style: italic; font-size: 1.05rem; font-weight: 600; }
+  .deed .addr { font-family: "EB Garamond", serif; font-size: 0.8rem; color: var(--ink-soft); margin-top: 10px; }
+  .deed .seal {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 14px; font-size: 0.78rem; font-style: italic;
+    color: var(--paper); background: var(--stamp);
+    padding: 4px 12px; border-radius: 999px;
+    transform: rotate(-2deg);
+  }
+
+  /* ---------- wallet section ---------- */
+  .wallet-section {
+    border-top: 2px solid var(--rule);
+    padding: 64px 0 70px;
+  }
+  .wallet-box {
+    background: var(--paper-card);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 32px 30px;
+    max-width: 520px;
+  }
+  .wallet-box h3 { font-size: 1.25rem; font-style: italic; margin-bottom: 10px; }
+  .wallet-box p { color: var(--ink-soft); margin: 0 0 20px; }
+  .wallet-status {
+    margin-top: 18px;
+    font-family: "EB Garamond", serif;
+    font-style: italic;
+    font-size: 0.92rem;
+    min-height: 1.4em;
+  }
+  .wallet-status.ok { color: var(--verify-soft); }
+  .wallet-status.err { color: var(--stamp-soft); }
+  .badge {
+    display: none;
+    align-items: center; gap: 8px;
+    margin-top: 10px;
+  }
+  .badge.show { display: inline-flex; }
+  .badge .ring {
+    width: 26px; height: 26px; border-radius: 50%;
+    color: var(--paper);
+    display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+    background: radial-gradient(circle at 32% 28%, var(--verify-soft), var(--verify) 70%);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transform: rotate(-8deg);
+  }
+
+  /* ---------- footer ---------- */
+  footer {
+    border-top: 2px solid var(--rule);
+    padding: 40px 0 calc(40px + env(safe-area-inset-bottom, 0px));
+    font-size: 0.9rem;
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+  footer .foot-row { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  footer a { color: var(--ink-soft); text-decoration: underline; text-underline-offset: 3px; }
+  footer a:hover { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">The Shared <span>Ledger</span></div>
+    <nav>
+      <a href="#what">Blockchain</a>
+      <a href="#decentral">Decentralization</a>
+      <a href="#crypto">Crypto</a>
+      <a href="#contracts">Contracts</a>
+      <a href="#nft">NFTs</a>
+      <a href="#dao">DAOs</a>
+      <a href="#wallet">Try it</a>
+    </nav>
+  </div>
+
+  <section class="hero">
+    <div class="folio">Web3 Primer — Entry No. 001</div>
+    <h1>A ledger everyone keeps together.</h1>
+    <p class="lede">For most of history, records of who-owns-what were kept by one trusted party — a bank, a registry office, a platform. Web3 asks a stranger question: what if the ledger itself was the trusted party, copied everywhere, owned nowhere?</p>
+    <div class="cta-row">
+      <a class="btn primary" href="#what">Start reading</a>
+      <a class="btn" href="#wallet">Connect a wallet</a>
+    </div>
+
+    <div class="chain-stage" aria-hidden="false">
+      <div class="chain">
+        <div class="blockcard"><div class="num">BLOCK 0001</div><div class="hash">0x9f2a...e71c</div><div class="stamp">✓</div></div>
+        <div class="link"></div>
+        <div class="blockcard"><div class="num">BLOCK 0002</div><div class="hash">0x3b8d...44a2</div><div class="stamp">✓</div></div>
+        <div class="link"></div>
+        <div class="blockcard"><div class="num">BLOCK 0003</div><div class="hash">0x7e01...c9f5</div><div class="stamp">✓</div></div>
+        <div class="link"></div>
+        <div class="blockcard"><div class="num">BLOCK 0004</div><div class="hash">0xa41f...02bb</div><div class="stamp">✓</div></div>
+        <div class="link"></div>
+        <div class="blockcard"><div class="num">BLOCK 0005</div><div class="hash">0x18cd...9e3a</div><div class="stamp">✓</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ledger">
+
+    <article class="entry" id="what">
+      <div class="folio">001</div>
+      <div>
+        <h2>What a blockchain actually is</h2>
+        <p>Strip away the hype and a blockchain is a record book copied across thousands of computers instead of locked in one office. Each new page — a <span class="keyword">block</span> — lists a batch of transactions and is sealed with a <span class="keyword">hash</span>: a short fingerprint generated from everything on that page.</p>
+        <p>Here's the clever part: each block's hash also depends on the hash of the block before it. Change one word on an old page and its fingerprint changes, which breaks every fingerprint after it. That's what "immutable" really means here — not impossible to alter, just instantly obvious and expensive to fake.</p>
+      </div>
+    </article>
+
+    <article class="entry" id="decentral">
+      <div class="folio">002</div>
+      <div>
+        <h2>Decentralization: who keeps the copy</h2>
+        <p>A normal ledger has one keeper. If the bank makes an error, or the platform shuts down, the record goes with it. A blockchain hands a copy to everyone in the network and settles disagreements through <span class="keyword">consensus</span> — rules like Proof of Work or Proof of Stake that decide whose version of the next block gets accepted by the rest.</p>
+        <div class="diagram-pair">
+          <div class="diagram-box">
+            <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+              <rect x="85" y="60" width="30" height="30" fill="none" stroke="var(--ink)" stroke-width="2"/>
+              <circle cx="20" cy="20" r="7" fill="none" stroke="var(--rule)" stroke-width="2"/>
+              <circle cx="180" cy="20" r="7" fill="none" stroke="var(--rule)" stroke-width="2"/>
+              <circle cx="20" cy="130" r="7" fill="none" stroke="var(--rule)" stroke-width="2"/>
+              <circle cx="180" cy="130" r="7" fill="none" stroke="var(--rule)" stroke-width="2"/>
+              <circle cx="100" cy="20" r="7" fill="none" stroke="var(--rule)" stroke-width="2"/>
+              <line x1="100" y1="75" x2="20" y2="20" stroke="var(--rule)" stroke-width="1.5"/>
+              <line x1="100" y1="75" x2="180" y2="20" stroke="var(--rule)" stroke-width="1.5"/>
+              <line x1="100" y1="75" x2="20" y2="130" stroke="var(--rule)" stroke-width="1.5"/>
+              <line x1="100" y1="75" x2="180" y2="130" stroke="var(--rule)" stroke-width="1.5"/>
+              <line x1="100" y1="75" x2="100" y2="20" stroke="var(--rule)" stroke-width="1.5"/>
+            </svg>
+            <div class="cap">one ledger keeper</div>
+          </div>
+          <div class="diagram-box">
+            <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+              <g fill="none" stroke="var(--rule)" stroke-width="1.5">
+                <line x1="30" y1="30" x2="100" y2="20"/>
+                <line x1="30" y1="30" x2="170" y2="35"/>
+                <line x1="30" y1="30" x2="30" y2="120"/>
+                <line x1="30" y1="30" x2="100" y2="130"/>
+                <line x1="100" y1="20" x2="170" y2="35"/>
+                <line x1="100" y1="20" x2="100" y2="130"/>
+                <line x1="170" y1="35" x2="170" y2="120"/>
+                <line x1="170" y1="35" x2="100" y2="130"/>
+                <line x1="30" y1="120" x2="100" y2="130"/>
+                <line x1="170" y1="120" x2="100" y2="130"/>
+                <line x1="30" y1="120" x2="170" y2="120"/>
+              </g>
+              <g fill="none" stroke="var(--ink)" stroke-width="2">
+                <circle cx="30" cy="30" r="7"/>
+                <circle cx="100" cy="20" r="7"/>
+                <circle cx="170" cy="35" r="7"/>
+                <circle cx="30" cy="120" r="7"/>
+                <circle cx="170" cy="120" r="7"/>
+                <circle cx="100" cy="130" r="7"/>
+              </g>
+            </svg>
+            <div class="cap">many ledger keepers</div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="entry" id="crypto">
+      <div class="folio">003</div>
+      <div>
+        <h2>Cryptocurrency: entries, not coins</h2>
+        <p>A coin like Bitcoin or Ether is really a line in the shared ledger saying "this much value moved from address A to address B." Your wallet doesn't hold coins the way a leather wallet holds cash — it holds a <span class="keyword">private key</span>, a secret signature proving the entries belong to you.</p>
+        <p>Lose the key and you lose access, permanently. There is no branch to walk into and no password-reset email — which is exactly the trade-off decentralization makes.</p>
+      </div>
+    </article>
+
+    <article class="entry" id="contracts">
+      <div class="folio">004</div>
+      <div>
+        <h2>Smart contracts: rules that run themselves</h2>
+        <p>A smart contract writes "if this, then that" directly into the ledger. If address A sends 1 ETH, release the ticket. If the auction closes, send the funds to the highest bidder. Once deployed, nobody can pull it aside for a favor — it executes exactly as written, every time.</p>
+        <p>It resembles a vending machine more than a legal contract: no clerk, no landlord, no discretion. That reliability is the entire pitch, and also the entire risk — a bug written into the machine runs just as faithfully as a correct one.</p>
+      </div>
+    </article>
+
+    <article class="entry" id="nft">
+      <div class="folio">005</div>
+      <div>
+        <h2>NFTs: unique entries in a fungible world</h2>
+        <p>One Bitcoin is worth exactly one Bitcoin, always — that's what "fungible" means. An NFT (non-fungible token) is a ledger entry that instead says: <span class="keyword">this one thing is unique, and this address owns it</span> — closer to a deed or a ticket stub than to money.</p>
+        <p>What's provably owned is often just the deed, not the file itself — the artwork usually lives elsewhere, with the token pointing to it.</p>
+        <div class="deed">
+          <div class="title">Certificate of Provenance</div>
+          <div class="addr">owner: 0x7c4f...91ad<br>token id: #0042</div>
+          <div class="seal">recorded on ledger</div>
+        </div>
+      </div>
+    </article>
+
+    <article class="entry" id="dao">
+      <div class="folio">006</div>
+      <div>
+        <h2>DAOs: bylaws written as code</h2>
+        <p>A DAO — Decentralized Autonomous Organization — runs a group the way a smart contract runs a transaction: budgets and voting rules live in code, not a binder in a filing cabinet. Members hold tokens that double as voting weight, and proposals pass or fail by the ledger's own tally.</p>
+        <p>No CEO signs off. The organization's "decision" is whatever the code and the vote produce — for better and for worse.</p>
+      </div>
+    </article>
+
+  </section>
+
+  <section class="wallet-section" id="wallet">
+    <div class="folio">Bonus Entry</div>
+    <h2 style="font-size:1.7rem; margin-top:14px; margin-bottom:8px;">Sign your own ledger entry</h2>
+    <p style="color:var(--ink-soft); max-width:56ch; margin-bottom:26px;">Everything above is theory. This button makes it real for a second: connecting a wallet doesn't move any funds — it just proves, with your private key, that an address is yours.</p>
+    <div class="wallet-box">
+      <h3>Connect a wallet</h3>
+      <p>Requires a browser wallet such as MetaMask. Nothing is sent, spent, or signed beyond the connection itself.</p>
+      <button class="btn primary" id="connectBtn" type="button">Connect wallet</button>
+      <div class="wallet-status" id="walletStatus"></div>
+      <div class="badge" id="walletBadge"><span class="ring">✓</span> <span id="walletAddr" style="font-family:'EB Garamond',serif; font-style:italic; font-size:0.92rem;"></span></div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="foot-row">
+      <div>Written as a beginner primer for a Web3 &amp; Blockchain hackathon track.</div>
+      <div>
+        <a href="https://ethereum.org/en/developers/docs/" target="_blank" rel="noopener">ethereum.org docs</a> ·
+        <a href="https://bitcoin.org/en/how-it-works" target="_blank" rel="noopener">bitcoin.org</a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function() {
+  var btn = document.getElementById('connectBtn');
+  var status = document.getElementById('walletStatus');
+  var badge = document.getElementById('walletBadge');
+  var addrEl = document.getElementById('walletAddr');
+
+  function short(addr) {
+    return addr.slice(0, 6) + '…' + addr.slice(-4);
+  }
+
+  btn.addEventListener('click', async function() {
+    status.className = 'wallet-status';
+    status.textContent = '';
+    badge.classList.remove('show');
+
+    if (typeof window.ethereum === 'undefined') {
+      status.className = 'wallet-status err';
+      status.textContent = 'No wallet detected. Install MetaMask (or another browser wallet) to try this.';
+      return;
+    }
+    try {
+      status.textContent = 'Requesting permission…';
+      var accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      if (accounts && accounts.length) {
+        status.className = 'wallet-status ok';
+        status.textContent = 'Connected.';
+        addrEl.textContent = short(accounts[0]);
+        badge.classList.add('show');
+      } else {
+        status.className = 'wallet-status err';
+        status.textContent = 'No account was returned.';
+      }
+    } catch (err) {
+      status.className = 'wallet-status err';
+      status.textContent = (err && err.message) ? err.message : 'Connection was rejected.';
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
